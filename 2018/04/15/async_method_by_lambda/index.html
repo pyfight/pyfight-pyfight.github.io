@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>巧用lambda实现异步方法 | Pyfight</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="将lambda理解成为一个方法加入lambda之后，很多写法都变得简单起来，如创建一个线程对象，可以： 123456789101112new Thread(new Runnable() &amp;#123;    @Override    public void run() &amp;#123;        System.out.print(&quot;Hello&quot;);    &amp;#125;&amp;#125;);lambda写法">
+<meta name="keywords" content="javase,lambda">
+<meta property="og:type" content="article">
+<meta property="og:title" content="巧用lambda实现异步方法">
+<meta property="og:url" content="https://pyfight.github.io/2018/04/15/async_method_by_lambda/index.html">
+<meta property="og:site_name" content="Pyfight">
+<meta property="og:description" content="将lambda理解成为一个方法加入lambda之后，很多写法都变得简单起来，如创建一个线程对象，可以： 123456789101112new Thread(new Runnable() &amp;#123;    @Override    public void run() &amp;#123;        System.out.print(&quot;Hello&quot;);    &amp;#125;&amp;#125;);lambda写法">
+<meta property="og:locale" content="zh-ch">
+<meta property="og:updated_time" content="2018-04-15T08:34:15.369Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="巧用lambda实现异步方法">
+<meta name="twitter:description" content="将lambda理解成为一个方法加入lambda之后，很多写法都变得简单起来，如创建一个线程对象，可以： 123456789101112new Thread(new Runnable() &amp;#123;    @Override    public void run() &amp;#123;        System.out.print(&quot;Hello&quot;);    &amp;#125;&amp;#125;);lambda写法">
+  
+    <link rel="alternate" href="/atom.xml" title="Pyfight" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    
+    <div id="header-inner" class="inner">
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://pyfight.github.io"></form>
+      </div>
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">首页</a>
+        
+          <a class="main-nav-link" href="/archives">归档</a>
+        
+          <a class="main-nav-link" href="/about">关于</a>
+        
+      </nav>
+      
+    </div>
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Pyfight</a>
+      </h1>
+      
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-async_method_by_lambda" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/04/15/async_method_by_lambda/" class="article-date">
+  <time datetime="2018-04-15T07:27:53.000Z" itemprop="datePublished">2018-04-15</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/java/">java</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      巧用lambda实现异步方法
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- Table of Contents -->
+        
+        <h2 id="将lambda理解成为一个方法"><a href="#将lambda理解成为一个方法" class="headerlink" title="将lambda理解成为一个方法"></a>将lambda理解成为一个方法</h2><p>加入lambda之后，很多写法都变得简单起来，如创建一个线程对象，可以：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.print(<span class="string">"Hello"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">lambda写法:</span><br><span class="line"><span class="keyword">new</span> Thread(() -&gt; System.out.print(<span class="string">"Hello"</span>));</span><br><span class="line"></span><br><span class="line">单独将lambda拎出来：</span><br><span class="line">Runnable runnable = () -&gt; System.out.print(<span class="string">"Hello"</span>);</span><br></pre></td></tr></table></figure>
+<p>其实lambda代表的就是一个<strong>接口</strong>的实现而已（匿名内部类）。而这种接口也叫函数式接口，会有@FunctionalInterface注解进行编译时检查。</p>
+<p>或者直接把lambda看成一个方法，上述的 <code>() -&gt; System.out.print(&quot;Hello&quot;)</code> 就是代表一个<strong>无入参、无返回值</strong>的一个方法（等同于<code>public void run() {System.out.print(&quot;Hello&quot;)}</code>），而<code>Runnable runnable</code>则是指向这个方法（类似函数指针），需要调用这个方法时，调用<code>runnable.run()</code>即可.</p>
+<a id="more"></a>
+<p>当有<strong>一个参数、无返回值</strong>则是<code>Consumer&lt;T&gt;</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 对printStream对象的void print(String s)方法的引用</span></span><br><span class="line">PrintStream printStream = System.out;</span><br><span class="line">Consumer&lt;String&gt; consumer = printStream::print;</span><br><span class="line">consumer.accept(<span class="string">"Hello"</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 输出</span></span><br><span class="line">Hello</span><br></pre></td></tr></table></figure>
+<p>对于有入参（一个或两个）、有返回值等情况，JDK也提供了对应的函数式接口：</p>
+<table>
+<thead>
+<tr>
+<th>接口</th>
+<th>函数</th>
+<th>说明 </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Consumer &lt;T&gt;</code></td>
+<td><code>void accept(T t);</code></td>
+<td>无返回值、一个入参，T为入参类型</td>
+</tr>
+<tr>
+<td><code>BiConsumer&lt;T, U&gt;</code></td>
+<td><code>void accept(T t, U u);</code></td>
+<td>无返回值、两个入参，T为第一个入参类型、U为第二个入参类型</td>
+</tr>
+<tr>
+<td><code>Supplier&lt;T&gt;</code></td>
+<td><code>T get();</code></td>
+<td>有返回值、无入参，T为返回值类型</td>
+</tr>
+<tr>
+<td><code>Function&lt;T, R&gt;</code></td>
+<td><code>R apply(T t);</code></td>
+<td>有返回值、一个入参，T为入参类型，R为返回类型</td>
+</tr>
+<tr>
+<td><code>BiFunction&lt;T, U, R&gt;</code></td>
+<td><code>R apply(T t, U u);</code></td>
+<td>有返回值、两个入参，T为第一个入参类型、U为第二个入参类型，R为返回类型</td>
+</tr>
+</tbody>
+</table>
+<p>以上为java.util.function包下的部分接口，剩余的基本上就是指定泛型类型的函数接口了，例如<code>LongConsumer</code>，无泛型，其实就是指定入参只能是Long。</p>
+<p>上述已经代表了大部分的函数可以表示的形式了（值得注意的是，三个及以上的入参的函数式接口JDK并没有提供，需要时要自定义实现，实际上也很少用到）。</p>
+<p>方法有静态方法(static)和非静态方法，但函数式接口关注的仅是入参、出参类型和个数而已：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> Class Test &#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> Long <span class="title">noStaticFoo</span><span class="params">(String str)</span> </span>&#123;...&#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Long <span class="title">staticFoo</span><span class="params">(String str)</span> </span>&#123;...&#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 静态方法，类::</span></span><br><span class="line">        Function&lt;String, Long&gt; staticFoo = Test::staticFoo;</span><br><span class="line">        Long apply = staticFoo.apply(<span class="string">"100"</span>);</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 非静态方法，实例对象::</span></span><br><span class="line">        Test test = <span class="keyword">new</span> Test();</span><br><span class="line">        Function&lt;String, Long&gt; noStaticFoo = test::noStaticFoo;</span><br><span class="line">        Long apply2 = noStaticFoo.apply(<span class="string">"100"</span>);</span><br><span class="line">        </span><br><span class="line">        <span class="comment">/* 这种可以理解成两个入参、除了原来方法的入参外，还要指明实例对象（因为这是一个实例方法）*/</span></span><br><span class="line">        BiFunction&lt;Test, String, Long&gt; noStaticFooTest = Test::noStaticFoo;</span><br><span class="line">        Long apply3 = noStaticFooTest.apply(test, <span class="string">"100"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="将方法变成异步调用"><a href="#将方法变成异步调用" class="headerlink" title="将方法变成异步调用"></a>将方法变成异步调用</h2><p>当一个函数/方法可以被变量引用时，其实就可以利用这个特性做一些比较方便的事情了，例如Streams的相关API。效率也比反射中的Method要高。</p>
+<p>异步调用，方法的调用可以进行异步处理，直接返回Future对象（低侵入性）。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">    <span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AsyncExecutor</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 线程池</span></span><br><span class="line">        <span class="keyword">private</span> ExecutorService executorService = Executors.newFixedThreadPool(<span class="number">10</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">        * 单个入参，有返回值的异步执行方法 , public User getById(Long id)</span></span><br><span class="line"><span class="comment">        *</span></span><br><span class="line"><span class="comment">        * <span class="doctag">@param</span> method 要执行的方法，如 , userHttpService::getById</span></span><br><span class="line"><span class="comment">        * <span class="doctag">@param</span> param  入参值，如 100</span></span><br><span class="line"><span class="comment">        * <span class="doctag">@param</span> &lt;P&gt;    入参类型，如 Long</span></span><br><span class="line"><span class="comment">        * <span class="doctag">@param</span> &lt;R&gt;    返回值类型,如 User</span></span><br><span class="line"><span class="comment">        * <span class="doctag">@return</span> Future对象，用以判断是否执行结束、获取返回结果</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">        <span class="keyword">public</span> &lt;P, R&gt; <span class="function">Future&lt;R&gt; <span class="title">async</span><span class="params">(Function&lt;P, R&gt; method, P param)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> executorService.submit(() -&gt; method.apply(param));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">```  </span><br><span class="line">    </span><br><span class="line">假如有个方法，根据id远程拉取用户数据（HTTP），</span><br><span class="line"></span><br><span class="line">```java</span><br><span class="line">    <span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UserHttpService</span> </span>&#123;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> User <span class="title">getById</span><span class="params">(Long id)</span> </span>&#123;</span><br><span class="line">            ...</span><br><span class="line">            <span class="keyword">return</span> user;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>原本：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// new或spring注入</span></span><br><span class="line">UserHttpService userHttpService = <span class="keyword">new</span> UserHttpService(); </span><br><span class="line"></span><br><span class="line">User user = userHttpService.getById(id);</span><br></pre></td></tr></table></figure>
+<p>现在：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// new或spring注入</span></span><br><span class="line">UserHttpService userHttpService = <span class="keyword">new</span> UserHttpService();</span><br><span class="line">AsyncExecutor asyncExecutor = <span class="keyword">new</span> AsyncExecutor(); </span><br><span class="line"></span><br><span class="line">Future&lt;User&gt; userFuture = asyncExecutor.async(userHttpService::getById, id);</span><br><span class="line">User user = userFuture.get();</span><br></pre></td></tr></table></figure>
+<p>对于原来的UserHttpService并不需要做任何修改，只要在调用方指定为异步即可。</p>
+<p>对于其他的无入参、两入参、无返回值等的方法形式，也可以类似处理。可以参考<a href="https://github.com/pyfight/async-method/blob/master/src/main/java/io/github/pyfight/async/AsyncExecutor.java" target="_blank" rel="noopener">本人github中代码</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://pyfight.github.io/2018/04/15/async_method_by_lambda/" data-id="cjg0ly9730000m4ou3sa4dndr" class="article-share-link">分享</a>
+      
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/javase/">javase</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/lambda/">lambda</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+ <script src="/jquery/jquery.min.js"></script>
+  <div id="random_posts">
+    <h2>推荐文章</h2>
+    <div class="random_posts_ul">
+      <script>
+          var random_count =4
+          var site = {BASE_URI:'/'};
+          function load_random_posts(obj) {
+              var arr=site.posts;
+              if (!obj) return;
+              // var count = $(obj).attr('data-count') || 6;
+              for (var i, tmp, n = arr.length; n; i = Math.floor(Math.random() * n), tmp = arr[--n], arr[n] = arr[i], arr[i] = tmp);
+              arr = arr.slice(0, random_count);
+              var html = '<ul>';
+            
+              for(var j=0;j<arr.length;j++){
+                var item=arr[j];
+                html += '<li><strong>' + 
+                item.date + ':&nbsp;&nbsp;<a href="' + (site.BASE_URI+item.uri) + '">' + 
+                (item.title || item.uri) + '</a></strong>';
+                if(item.excerpt){
+                  html +='<div class="post-excerpt">'+item.excerpt+'</div>';
+                }
+                html +='</li>';
+                
+              }
+              $(obj).html(html + '</ul>');
+          }
+          $('.random_posts_ul').each(function () {
+              var c = this;
+              if (!site.posts || !site.posts.length){
+                  $.getJSON(site.BASE_URI + 'js/posts.js',function(json){site.posts = json;load_random_posts(c)});
+              } 
+               else{
+                load_random_posts(c);
+              }
+          });
+      </script>
+    </div>
+  </div>
+
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2018/04/15/mysql_optimization/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <div class="article-nav-title">mysql优化心得</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+ 
+     
+  <div class="comments" id="comments">
+    
+     
+       
+      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+    
+       
+      
+      
+           <div id="gitment_comments"></div>
+    
+  </div>
+ 
+  
+
+</section>
+           
+    <aside id="sidebar">
+  
+    
+
+  
+    
+    <div class="widget-wrap">
+    
+      <div class="widget" id="toc-widget-fixed">
+      
+        <strong class="toc-title">文章目录</strong>
+        <div class="toc-widget-list">
+              <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#将lambda理解成为一个方法"><span class="toc-number">1.</span> <span class="toc-text">将lambda理解成为一个方法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#将方法变成异步调用"><span class="toc-number">2.</span> <span class="toc-text">将方法变成异步调用</span></a></li></ol>
+          </div>
+      </div>
+    </div>
+
+  
+    
+
+  
+    
+  
+    
+  
+    
+
+  
+    
+  
+    <!--微信公众号二维码-->
+
+
+  
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-left">
+      &copy; 2014 - 2018 pyfight&nbsp;|&nbsp;
+      主题 <a href="https://github.com/giscafer/hexo-theme-cafe/" target="_blank">Cafe</a>
+    </div>
+     <div id="footer-right">
+      联系方式&nbsp;|&nbsp;775229224@qq.com
+    </div>
+  </div>
+</footer>
+ <script src="/jquery/jquery.min.js"></script>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">首页</a>
+  
+    <a href="/archives" class="mobile-nav-link">归档</a>
+  
+    <a href="/about" class="mobile-nav-link">关于</a>
+  
+</nav>
+    <img class="back-to-top-btn" src="/images/fly-to-top.png"/>
+<script>
+// Elevator script included on the page, already.
+window.onload = function() {
+  var elevator = new Elevator({
+    selector:'.back-to-top-btn',
+    element: document.querySelector('.back-to-top-btn'),
+    duration: 1000 // milliseconds
+  });
+}
+</script>
+      
+
+  
+    <script>
+      var cloudTieConfig = {
+        url: document.location.href, 
+        sourceId: "",
+        productKey: "e2fb4051c49842688ce669e634bc983f",
+        target: "cloud-tie-wrapper"
+      };
+    </script>
+    <script src="https://img1.ws.126.net/f2e/tie/yun/sdk/loader.js"></script>
+    
+
+  
+
+
+
+
+
+
+
+<!-- author:forvoid begin -->
+<!-- author:forvoid begin -->
+
+  <link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+  <script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script> 
+  <script>
+  var gitment = new Gitment({
+    // id: '页面 ID', // 可选。默认为 location.href
+    owner: 'pyfight',
+    repo: 'pyfight.github.io',
+    oauth: {
+    client_id: 'b496a6861cf2f61f1fd3',
+    client_secret: 'fdcf3633cce4b5f5439ae4bbcb7ae7b3bf3ad83d',
+    }
+  })
+  gitment.render(document.getElementById("gitment_comments"))
+</script>
+
+
+<!-- author:forvoid end -->
+
+<!-- author:forvoid end -->
+
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      })
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      })
+    </script>
+    <script type="text/javascript" src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+ <script src="/js/is.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+<script src="/js/elevator.js"></script>
+  </div>
+</body>
+</html>

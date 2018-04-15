@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>mysql优化心得 | Pyfight</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="本文主要通过数据库表设计、sql处理、应用层优化三个层面，来谈谈笔者在工作中的一些心得和建议。 合理设计数据库表合理添加索引（1）经常进行条件查询（where或join on）的字段考虑加上索引 （2）经常分组（GROUP BY）或排序（ORDER BY）的字段考虑加上索引（Btree） （3）差异性大的字段才适合建立索引。 差异性表示某行数据的字段在所有数据中是否足够独特，鹤立鸡群。就好像qq号">
+<meta name="keywords" content="mysql">
+<meta property="og:type" content="article">
+<meta property="og:title" content="mysql优化心得">
+<meta property="og:url" content="https://pyfight.github.io/2018/04/15/mysql_optimization/index.html">
+<meta property="og:site_name" content="Pyfight">
+<meta property="og:description" content="本文主要通过数据库表设计、sql处理、应用层优化三个层面，来谈谈笔者在工作中的一些心得和建议。 合理设计数据库表合理添加索引（1）经常进行条件查询（where或join on）的字段考虑加上索引 （2）经常分组（GROUP BY）或排序（ORDER BY）的字段考虑加上索引（Btree） （3）差异性大的字段才适合建立索引。 差异性表示某行数据的字段在所有数据中是否足够独特，鹤立鸡群。就好像qq号">
+<meta property="og:locale" content="zh-ch">
+<meta property="og:updated_time" content="2018-04-15T08:46:14.213Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="mysql优化心得">
+<meta name="twitter:description" content="本文主要通过数据库表设计、sql处理、应用层优化三个层面，来谈谈笔者在工作中的一些心得和建议。 合理设计数据库表合理添加索引（1）经常进行条件查询（where或join on）的字段考虑加上索引 （2）经常分组（GROUP BY）或排序（ORDER BY）的字段考虑加上索引（Btree） （3）差异性大的字段才适合建立索引。 差异性表示某行数据的字段在所有数据中是否足够独特，鹤立鸡群。就好像qq号">
+  
+    <link rel="alternate" href="/atom.xml" title="Pyfight" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    
+    <div id="header-inner" class="inner">
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://pyfight.github.io"></form>
+      </div>
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">首页</a>
+        
+          <a class="main-nav-link" href="/archives">归档</a>
+        
+          <a class="main-nav-link" href="/about">关于</a>
+        
+      </nav>
+      
+    </div>
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Pyfight</a>
+      </h1>
+      
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-mysql_optimization" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/04/15/mysql_optimization/" class="article-date">
+  <time datetime="2018-04-15T07:26:16.000Z" itemprop="datePublished">2018-04-15</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      mysql优化心得
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- Table of Contents -->
+        
+        <p>本文主要通过数据库表设计、sql处理、应用层优化三个层面，来谈谈笔者在工作中的一些心得和建议。</p>
+<h2 id="合理设计数据库表"><a href="#合理设计数据库表" class="headerlink" title="合理设计数据库表"></a>合理设计数据库表</h2><h3 id="合理添加索引"><a href="#合理添加索引" class="headerlink" title="合理添加索引"></a>合理添加索引</h3><p>（1）<strong>经常进行条件查询（where或join on）的字段考虑加上索引</strong></p>
+<p>（2）<strong>经常分组（GROUP BY）或排序（ORDER BY）的字段考虑加上索引（Btree）</strong></p>
+<p>（3）<strong>差异性大的字段才适合建立索引</strong>。</p>
+<p>差异性表示某行数据的字段在所有数据中是否足够独特，鹤立鸡群。就好像qq号，独一无二，全部数据中的qq号都不一样；相对而言，性别男或者女，都有近一半是相同的，这时候加上索引效果并不理想。</p>
+<p>有一种情况，例如某个文章的状态status（0未审核，<strong>1审核通过待发布</strong>，2已发布，3审核不通过），我们应用层有个定时器（10秒一次）在扫数据库中 <strong>审核通过待发布</strong>的，然后进行发布，更新status为2。在实际数据中，尽管大部分数据都是<strong>已发布</strong>（差异性小），但<strong>审核通过待发布</strong>的数据是非常少的（差异性较大），这时候也可以考虑加上索引（用于where status=1的条件查询则非常有效）。</p>
+<p>（4）<strong>当需要保证数据某个重要字段的唯一性时，考虑加上唯一索引</strong>（做数据库级别的限制往往能避免很多因为错误数据导致的问题）<br><a id="more"></a></p>
+<blockquote>
+<p>注：索引并不是越多越好，因为增加索引后，新增（insert）或更新对应字段（update）时，索引会做对应的调整，效率会有一定影响，索引越多影响越大。</p>
+</blockquote>
+<h3 id="表字段个数不要太多"><a href="#表字段个数不要太多" class="headerlink" title="表字段个数不要太多"></a>表字段个数不要太多</h3><ul>
+<li>简化业务逻辑开发</li>
+<li>当字段太多时，插入数据时，其中往往有许多用不上（默认值），会占用空间（null值也会占用空间）</li>
+<li>防止应用层直接select * 情况下取了多余的无用数据</li>
+</ul>
+<p>我们公司是建议业务相关字段10个以内。</p>
+<p>一般最初设计阶段，某个业务表有很多字段时，可以考虑拆分。一是按业务逻辑分、二是根据预估使用频率分。</p>
+<h3 id="避免使用触发器、函数、存储过程等"><a href="#避免使用触发器、函数、存储过程等" class="headerlink" title="避免使用触发器、函数、存储过程等"></a>避免使用触发器、函数、存储过程等</h3><p>函数、触发器这些往往在应用层就能处理，而开发人员可以直接管理，并不需要和DBA打过多的交道，移植也方便。</p>
+<p>另外<strong>数据库是拿来存数据的</strong>，除了增删改查，其他都不建议让数据库层面来干了。</p>
+<h3 id="注意-varchar-长度，取合理长度即可"><a href="#注意-varchar-长度，取合理长度即可" class="headerlink" title="注意 varchar 长度，取合理长度即可"></a>注意 varchar 长度，取合理长度即可</h3><p>varchar 超过255会多1个字节存储该字段值的长度；比如varchar(255)使用1个字节存储值长度，而varchar(256)则需要2个。</p>
+<p>而定义的长度会影响对应的索引长度，比如 varchar(100) 和 varchar(20) 其对应建立的索引，前者要比后者的长度要大。</p>
+<p>所以在满足业务场景的前提下，尽量取小的值即可。</p>
+<h3 id="小数（点）的设计，考虑使用decimal"><a href="#小数（点）的设计，考虑使用decimal" class="headerlink" title="小数（点）的设计，考虑使用decimal"></a>小数（点）的设计，考虑使用decimal</h3><p>在业务中往往包含一些小数的设计，例如价格（9.99元）、重量（51.3kg）等。</p>
+<p>因为float和double这种浮点类型都存在精度问题，当需要较高精度时，可以使用<strong>decimal</strong>来取代；</p>
+<p>另外一种达到要求精度的方案是降低字段表示的单位，从而消除小数，例如9.99元=999分，51.3kg=51300g，对应的字段使用整数表示即可。这种设计可能会增加应用层的复杂度（需要单位转换等），但如果经常进行排序的话，会有一定优势。</p>
+<p>而在一些金融相关的行业，有时候往往不仅仅精确小数点后面两三位，而是4位、5位甚至更多位（例如0.9065元），这时候最好使用decimal。</p>
+<blockquote>
+<p>注：decimal(10,4) 中，4表示小数位数，插入时超出则进行截取；10表示含小数在内的最多位数，这里整数则最多 (10-4) 位，超出时则报错。</p>
+</blockquote>
+<h2 id="sql篇"><a href="#sql篇" class="headerlink" title="sql篇"></a>sql篇</h2><h3 id="尽量避免联表查询"><a href="#尽量避免联表查询" class="headerlink" title="尽量避免联表查询"></a>尽量避免联表查询</h3><ul>
+<li>联表查询时，数量尽量不要超过2个</li>
+<li><strong>使用单表某些数据缓存（redis、memcached等）+ 应用层代码实现联表查询</strong>。</li>
+<li>必要时，联表查询的条件列加上索引</li>
+</ul>
+<h3 id="大量数据时需要分页时-用索引字段条件查询-limit-N-替代直接-limit-M-N"><a href="#大量数据时需要分页时-用索引字段条件查询-limit-N-替代直接-limit-M-N" class="headerlink" title="大量数据时需要分页时 用索引字段条件查询 + limit N 替代直接 limit M,N"></a>大量数据时需要分页时 用索引字段条件查询 + limit N 替代直接 limit M,N</h3><p>在大量数据时，mysql的limit M,N分页是存在比较严重的性能问题的，因为其会扫足前面M+N条数据，然后再取N条；当M非常大时，如2000万+时，效率就会非常慢了（10s+）；</p>
+<p><strong>其中一个解决方法是：适当结合索引字段（如主键id）+ limit N 就能避免这个问题。</strong></p>
+<p>如 ：select id, userName from t_user <strong>limit 20 000 000, 50;</strong></p>
+<p>假设第2000万条数据的<strong>id为 22 000 000；</strong></p>
+<p>改为：select id, userName from t_user <strong>where id &gt;= 22 000 000 limit 50;</strong></p>
+<p>尽管在实际中客户端往往没有这样需求（页码太大），但当需要加载所有数据时则经常用到（如缓存预热）。</p>
+<h3 id="不要对条件查询的字段进行运算或函数操作"><a href="#不要对条件查询的字段进行运算或函数操作" class="headerlink" title="不要对条件查询的字段进行运算或函数操作"></a>不要对条件查询的字段进行运算或函数操作</h3><p><strong>反例</strong>：</p>
+<p>(1) select id from t_user where age/2 &gt; 10;</p>
+<p>(2) select id from t_user where year(birthday) &lt; 2000;</p>
+<p>当age或birthday存在索引时，上面的语句并不会使用索引，而是直接进行全表扫描。</p>
+<p><strong>修改为</strong>：</p>
+<p>(1) select id from t_user where age &gt; 20;</p>
+<p>(2) select id from t_user where birthday &lt; ‘2000-01-01’;</p>
+<p><strong>上面的转换均可以在应用层的代码实现，尽量不要在数据库层面进行运算操作。</strong></p>
+<h3 id="经典优化"><a href="#经典优化" class="headerlink" title="经典优化"></a>经典优化</h3><ul>
+<li>name字段有索引，name like ‘%zhang%’ 没有用上索引，而name like ‘zhang%’则用上。</li>
+<li>联合索引(name, age) 最左匹配，where name=’li’ 或 where name=’li’ and age=18 用上该索引，而where age=18 则无法用到该索引。</li>
+<li>连接查询一般 优于 子查询</li>
+<li>exist 优于 in</li>
+<li>范围查询 between and 优于 in </li>
+<li><em>insert into t values(..),(..);</em> 优于多条 <em>insert into t (…);</em>，因为前者索引只做了一次调整。</li>
+</ul>
+<h2 id="应用层优化"><a href="#应用层优化" class="headerlink" title="应用层优化"></a>应用层优化</h2><h3 id="能在应用层处理的就不要在数据库处理"><a href="#能在应用层处理的就不要在数据库处理" class="headerlink" title="能在应用层处理的就不要在数据库处理"></a>能在应用层处理的就不要在数据库处理</h3><p><strong>数据库连接数量时有限的</strong>，数据库处理的东西越少，压力越小，处理时间越短，连接放回连接池的速度就越快，整个应用的吞吐量也会随之增大。</p>
+<p>所以一些条件运算、函数计算等都可以尽量在应用层面进行。</p>
+<blockquote>
+<p>注：要综合考虑代价，不要什么都不管就往应用层里面怼。当运用到索引的分组、排序往往在数据库中处理效率更高。</p>
+</blockquote>
+<h3 id="合理利用缓存"><a href="#合理利用缓存" class="headerlink" title="合理利用缓存"></a>合理利用缓存</h3><p>一些热点数据可以进行缓存，这时候大流量下，可以大大减少DB的压力。</p>
+<blockquote>
+<p>注：要注意缓存的管理，尽量保证数据一致性，在分布式环境下，应用本地缓存往往是不适用的（可以考虑redis等对缓存进行集中管理）。</p>
+</blockquote>
+<h3 id="利用消息机制进行异步DB操作"><a href="#利用消息机制进行异步DB操作" class="headerlink" title="利用消息机制进行异步DB操作"></a>利用消息机制进行异步DB操作</h3><p>高并发下，DB往往扛不住，要么直接被压垮，要么连接数远远不够用。</p>
+<p>目前来说，利用消息机制进行异步处理（相关DB操作）是一个不错的选择，因为消费的线程数量是有限的（DB可以承受的范围），这时候DB不会有那么大的压力，可以保证整个应用和DB都正常运行。</p>
+<p>当结合缓存时，就能保证异步处理期间，仍认为数据已经被正常处理的了，因为取数据时，优先取缓存中的而不是DB。</p>
+<h3 id="选择适合的框架"><a href="#选择适合的框架" class="headerlink" title="选择适合的框架"></a>选择适合的框架</h3><p>为了简化开发往往会选择对DB操作的框架，而这个的选择在数流量/数据量小时往往没有什么区别。但是一旦到哪里都在抠性能时，这里的优化往往是非常重要的。</p>
+<p><strong>一个是考虑公司情况（对哪种框架处理更有经验），另外一个是考虑业务场景，不同的框架往往有其擅长的地方。</strong></p>
+<p>如果选择不合适（可能框架本身原因，肯能是因为对框架缺乏了解），想要优化时，往往显得捉襟见肘，难以应对。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ol>
+<li>数据库是拿来存东西的，擅长的是增删改查，而不是各种逻辑处理和计算</li>
+<li>结合实际业务场景，才能设计出最合理的字段，不长不短，不多不少</li>
+<li>sql优化归根结底都是怎样把索引给用上，把索引的作用最大化</li>
+<li>善用缓存</li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://pyfight.github.io/2018/04/15/mysql_optimization/" data-id="cjg0ly9770001m4ouri234rrh" class="article-share-link">分享</a>
+      
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/mysql/">mysql</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+ <script src="/jquery/jquery.min.js"></script>
+  <div id="random_posts">
+    <h2>推荐文章</h2>
+    <div class="random_posts_ul">
+      <script>
+          var random_count =4
+          var site = {BASE_URI:'/'};
+          function load_random_posts(obj) {
+              var arr=site.posts;
+              if (!obj) return;
+              // var count = $(obj).attr('data-count') || 6;
+              for (var i, tmp, n = arr.length; n; i = Math.floor(Math.random() * n), tmp = arr[--n], arr[n] = arr[i], arr[i] = tmp);
+              arr = arr.slice(0, random_count);
+              var html = '<ul>';
+            
+              for(var j=0;j<arr.length;j++){
+                var item=arr[j];
+                html += '<li><strong>' + 
+                item.date + ':&nbsp;&nbsp;<a href="' + (site.BASE_URI+item.uri) + '">' + 
+                (item.title || item.uri) + '</a></strong>';
+                if(item.excerpt){
+                  html +='<div class="post-excerpt">'+item.excerpt+'</div>';
+                }
+                html +='</li>';
+                
+              }
+              $(obj).html(html + '</ul>');
+          }
+          $('.random_posts_ul').each(function () {
+              var c = this;
+              if (!site.posts || !site.posts.length){
+                  $.getJSON(site.BASE_URI + 'js/posts.js',function(json){site.posts = json;load_random_posts(c)});
+              } 
+               else{
+                load_random_posts(c);
+              }
+          });
+      </script>
+    </div>
+  </div>
+
+    
+<nav id="article-nav">
+  
+    <a href="/2018/04/15/async_method_by_lambda/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">上一篇</strong>
+      <div class="article-nav-title">
+        
+          巧用lambda实现异步方法
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2017/12/22/lambda_streams/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <div class="article-nav-title">浅谈Lambda与StreamsApi</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+ 
+     
+  <div class="comments" id="comments">
+    
+     
+       
+      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+    
+       
+      
+      
+           <div id="gitment_comments"></div>
+    
+  </div>
+ 
+  
+
+</section>
+           
+    <aside id="sidebar">
+  
+    
+
+  
+    
+    <div class="widget-wrap">
+    
+      <div class="widget" id="toc-widget-fixed">
+      
+        <strong class="toc-title">文章目录</strong>
+        <div class="toc-widget-list">
+              <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#合理设计数据库表"><span class="toc-number">1.</span> <span class="toc-text">合理设计数据库表</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#合理添加索引"><span class="toc-number">1.1.</span> <span class="toc-text">合理添加索引</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#表字段个数不要太多"><span class="toc-number">1.2.</span> <span class="toc-text">表字段个数不要太多</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#避免使用触发器、函数、存储过程等"><span class="toc-number">1.3.</span> <span class="toc-text">避免使用触发器、函数、存储过程等</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#注意-varchar-长度，取合理长度即可"><span class="toc-number">1.4.</span> <span class="toc-text">注意 varchar 长度，取合理长度即可</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#小数（点）的设计，考虑使用decimal"><span class="toc-number">1.5.</span> <span class="toc-text">小数（点）的设计，考虑使用decimal</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#sql篇"><span class="toc-number">2.</span> <span class="toc-text">sql篇</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#尽量避免联表查询"><span class="toc-number">2.1.</span> <span class="toc-text">尽量避免联表查询</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#大量数据时需要分页时-用索引字段条件查询-limit-N-替代直接-limit-M-N"><span class="toc-number">2.2.</span> <span class="toc-text">大量数据时需要分页时 用索引字段条件查询 + limit N 替代直接 limit M,N</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#不要对条件查询的字段进行运算或函数操作"><span class="toc-number">2.3.</span> <span class="toc-text">不要对条件查询的字段进行运算或函数操作</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#经典优化"><span class="toc-number">2.4.</span> <span class="toc-text">经典优化</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#应用层优化"><span class="toc-number">3.</span> <span class="toc-text">应用层优化</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#能在应用层处理的就不要在数据库处理"><span class="toc-number">3.1.</span> <span class="toc-text">能在应用层处理的就不要在数据库处理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#合理利用缓存"><span class="toc-number">3.2.</span> <span class="toc-text">合理利用缓存</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#利用消息机制进行异步DB操作"><span class="toc-number">3.3.</span> <span class="toc-text">利用消息机制进行异步DB操作</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#选择适合的框架"><span class="toc-number">3.4.</span> <span class="toc-text">选择适合的框架</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-number">4.</span> <span class="toc-text">总结</span></a></li></ol>
+          </div>
+      </div>
+    </div>
+
+  
+    
+
+  
+    
+  
+    
+  
+    
+
+  
+    
+  
+    <!--微信公众号二维码-->
+
+
+  
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-left">
+      &copy; 2014 - 2018 pyfight&nbsp;|&nbsp;
+      主题 <a href="https://github.com/giscafer/hexo-theme-cafe/" target="_blank">Cafe</a>
+    </div>
+     <div id="footer-right">
+      联系方式&nbsp;|&nbsp;775229224@qq.com
+    </div>
+  </div>
+</footer>
+ <script src="/jquery/jquery.min.js"></script>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">首页</a>
+  
+    <a href="/archives" class="mobile-nav-link">归档</a>
+  
+    <a href="/about" class="mobile-nav-link">关于</a>
+  
+</nav>
+    <img class="back-to-top-btn" src="/images/fly-to-top.png"/>
+<script>
+// Elevator script included on the page, already.
+window.onload = function() {
+  var elevator = new Elevator({
+    selector:'.back-to-top-btn',
+    element: document.querySelector('.back-to-top-btn'),
+    duration: 1000 // milliseconds
+  });
+}
+</script>
+      
+
+  
+    <script>
+      var cloudTieConfig = {
+        url: document.location.href, 
+        sourceId: "",
+        productKey: "e2fb4051c49842688ce669e634bc983f",
+        target: "cloud-tie-wrapper"
+      };
+    </script>
+    <script src="https://img1.ws.126.net/f2e/tie/yun/sdk/loader.js"></script>
+    
+
+  
+
+
+
+
+
+
+
+<!-- author:forvoid begin -->
+<!-- author:forvoid begin -->
+
+  <link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+  <script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script> 
+  <script>
+  var gitment = new Gitment({
+    // id: '页面 ID', // 可选。默认为 location.href
+    owner: 'pyfight',
+    repo: 'pyfight.github.io',
+    oauth: {
+    client_id: 'b496a6861cf2f61f1fd3',
+    client_secret: 'fdcf3633cce4b5f5439ae4bbcb7ae7b3bf3ad83d',
+    }
+  })
+  gitment.render(document.getElementById("gitment_comments"))
+</script>
+
+
+<!-- author:forvoid end -->
+
+<!-- author:forvoid end -->
+
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      })
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      })
+    </script>
+    <script type="text/javascript" src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+ <script src="/js/is.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+<script src="/js/elevator.js"></script>
+  </div>
+</body>
+</html>
