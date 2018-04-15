@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Pyfight</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="小姐，你喜欢吃青椒吗？">
+<meta name="keywords" content="pyfight,李健龙">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Pyfight">
+<meta property="og:url" content="https://pyfight.github.io/index.html">
+<meta property="og:site_name" content="Pyfight">
+<meta property="og:description" content="小姐，你喜欢吃青椒吗？">
+<meta property="og:locale" content="zh-ch">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Pyfight">
+<meta name="twitter:description" content="小姐，你喜欢吃青椒吗？">
+  
+    <link rel="alternate" href="/atom.xml" title="Pyfight" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    
+    <div id="header-inner" class="inner">
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://pyfight.github.io"></form>
+      </div>
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">首页</a>
+        
+          <a class="main-nav-link" href="/archives">归档</a>
+        
+          <a class="main-nav-link" href="/about">关于</a>
+        
+      </nav>
+      
+    </div>
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Pyfight</a>
+      </h1>
+      
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main">
+  
+    <article id="post-巧用lambda实现异步方法" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/04/15/巧用lambda实现异步方法/" class="article-date">
+  <time datetime="2018-04-15T07:27:53.000Z" itemprop="datePublished">2018-04-15</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/java/">java</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/04/15/巧用lambda实现异步方法/">巧用lambda实现异步方法</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="将lambda理解成为一个方法"><a href="#将lambda理解成为一个方法" class="headerlink" title="将lambda理解成为一个方法"></a>将lambda理解成为一个方法</h2><p>加入lambda之后，很多写法都变得简单起来，如创建一个线程对象，可以：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.print(<span class="string">"Hello"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">lambda写法:</span><br><span class="line"><span class="keyword">new</span> Thread(() -&gt; System.out.print(<span class="string">"Hello"</span>));</span><br><span class="line"></span><br><span class="line">单独将lambda拎出来：</span><br><span class="line">Runnable runnable = () -&gt; System.out.print(<span class="string">"Hello"</span>);</span><br></pre></td></tr></table></figure>
+<p>其实lambda代表的就是一个<strong>接口</strong>的实现而已（匿名内部类）。而这种接口也叫函数式接口，会有@FunctionalInterface注解进行编译时检查。</p>
+<p>或者直接把lambda看成一个方法，上述的 <code>() -&gt; System.out.print(&quot;Hello&quot;)</code> 就是代表一个<strong>无入参、无返回值</strong>的一个方法（等同于<code>public void run() {System.out.print(&quot;Hello&quot;)}</code>），而<code>Runnable runnable</code>则是指向这个方法（类似函数指针），需要调用这个方法时，调用<code>runnable.run()</code>即可.</p>
+        
+          <p class="article-more-link">
+            <a href="/2018/04/15/巧用lambda实现异步方法/#more">继续阅读全文 »</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://pyfight.github.io/2018/04/15/巧用lambda实现异步方法/" data-id="cjg0keta30000y8ou7u2pwr0r" class="article-share-link">分享</a>
+      
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/javase/">javase</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/lambda/">lambda</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+ 
+
+
+  
+    <article id="post-mysql优化心得" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/04/15/mysql优化心得/" class="article-date">
+  <time datetime="2018-04-15T07:26:16.000Z" itemprop="datePublished">2018-04-15</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/04/15/mysql优化心得/">mysql优化心得</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>本文主要通过数据库表设计、sql处理、应用层优化三个层面，来谈谈笔者在工作中的一些心得和建议。</p>
+<h2 id="合理设计数据库表"><a href="#合理设计数据库表" class="headerlink" title="合理设计数据库表"></a>合理设计数据库表</h2><h3 id="合理添加索引"><a href="#合理添加索引" class="headerlink" title="合理添加索引"></a>合理添加索引</h3><p>（1）<strong>经常进行条件查询（where或join on）的字段考虑加上索引</strong></p>
+<p>（2）<strong>经常分组（GROUP BY）或排序（ORDER BY）的字段考虑加上索引（Btree）</strong></p>
+<p>（3）<strong>差异性大的字段才适合建立索引</strong>。</p>
+<p>差异性表示某行数据的字段在所有数据中是否足够独特，鹤立鸡群。就好像qq号，独一无二，全部数据中的qq号都不一样；相对而言，性别男或者女，都有近一半是相同的，这时候加上索引效果并不理想。</p>
+<p>有一种情况，例如某个文章的状态status（0未审核，<strong>1审核通过待发布</strong>，2已发布，3审核不通过），我们应用层有个定时器（10秒一次）在扫数据库中 <strong>审核通过待发布</strong>的，然后进行发布，更新status为2。在实际数据中，尽管大部分数据都是<strong>已发布</strong>（差异性小），但<strong>审核通过待发布</strong>的数据是非常少的（差异性较大），这时候也可以考虑加上索引（用于where status=1的条件查询则非常有效）。</p>
+<p>（4）<strong>当需要保证数据某个重要字段的唯一性时，考虑加上唯一索引</strong>（做数据库级别的限制往往能避免很多因为错误数据导致的问题）<br>
+        
+          <p class="article-more-link">
+            <a href="/2018/04/15/mysql优化心得/#more">继续阅读全文 »</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://pyfight.github.io/2018/04/15/mysql优化心得/" data-id="cjg0keta70002y8ourbb33yp5" class="article-share-link">分享</a>
+      
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/mysql/">mysql</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+ 
+
+
+  
+    <article id="post-浅谈Lambda与StreamsApi" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2017/12/22/浅谈Lambda与StreamsApi/" class="article-date">
+  <time datetime="2017-12-22T14:14:09.000Z" itemprop="datePublished">2017-12-22</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/java/">java</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/12/22/浅谈Lambda与StreamsApi/">浅谈Lambda与StreamsApi</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>jdk1.8已经出了比较长的一段时间了，我们公司也开始逐步接入，各种新特性或API也渐渐用起来了（前路坑漫漫~~）<br>以下就个人理解，简单介绍下JDK1.8的两大特性：lambda表达式和StreamsAPI。</p>
+        
+          <p class="article-more-link">
+            <a href="/2017/12/22/浅谈Lambda与StreamsApi/#more">继续阅读全文 »</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://pyfight.github.io/2017/12/22/浅谈Lambda与StreamsApi/" data-id="cjg0ketab0005y8ou0pr2hdmv" class="article-share-link">分享</a>
+      
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/javase/">javase</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/lambda/">lambda</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+ 
+
+
+  
+    <article id="post-用户-角色-资源 简单权限设计" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2017/09/17/用户-角色-资源 简单权限设计/" class="article-date">
+  <time datetime="2017-09-17T07:24:01.000Z" itemprop="datePublished">2017-09-17</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/09/17/用户-角色-资源 简单权限设计/">用户-角色-资源 简单权限设计</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>所谓权限，无非就是<strong>哪些用户允许干哪些事情，能够访问、操作哪些资源（web通常以url为粒度）</strong>。一般的后台管理（配置）系统都会做相应的权限控制（往往以用户-角色-资源为基础）。</p>
+<h2 id="用户-角色-资源（user-role-resource）"><a href="#用户-角色-资源（user-role-resource）" class="headerlink" title="用户-角色-资源（user-role-resource）"></a>用户-角色-资源（user-role-resource）</h2><p>在实际业务中，某一类可以访问/操作的资源或者页面往往是对应某一类用户的。<br>例如：一个教务管理系统，小明同学、小红同学等用户可以进去查成绩，看课程安排；而张老师、王老师等用户则可以进去录入、修改学生成绩；资源表内容如下：</p>
+        
+          <p class="article-more-link">
+            <a href="/2017/09/17/用户-角色-资源 简单权限设计/#more">继续阅读全文 »</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://pyfight.github.io/2017/09/17/用户-角色-资源 简单权限设计/" data-id="cjg0ketac0006y8ou56g52tq6" class="article-share-link">分享</a>
+      
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/权限/">权限</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+ 
+
+
+  
+
+</section>
+           
+    <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+     
+        <h3 class="follow-title ">Follow me</h3>
+     
+    <div class="widget follow">
+      
+              <a class="github" aria-hidden="true" href="https://github.com/pyfight" target="_blank" title="Github"></a>
+      
+      
+      
+      
+            <a class="email" aria-hidden="true"  href="mailto:775229224@qq.com" target="_blank" title="邮箱"></a>
+      
+    </div>
+  </div>
+
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title categories">分类</h3>
+    <div class="widget" id="categories">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/java/">java</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title tagcloud">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/javase/" style="font-size: 25px;">javase</a> <a href="/tags/lambda/" style="font-size: 25px;">lambda</a> <a href="/tags/mysql/" style="font-size: 14px;">mysql</a> <a href="/tags/权限/" style="font-size: 14px;">权限</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title recent-posts">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2018/04/15/巧用lambda实现异步方法/">巧用lambda实现异步方法</a>
+          </li>
+        
+          <li>
+            <a href="/2018/04/15/mysql优化心得/">mysql优化心得</a>
+          </li>
+        
+          <li>
+            <a href="/2017/12/22/浅谈Lambda与StreamsApi/">浅谈Lambda与StreamsApi</a>
+          </li>
+        
+          <li>
+            <a href="/2017/09/17/用户-角色-资源 简单权限设计/">用户-角色-资源 简单权限设计</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title archive">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">December 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">September 2017</a><span class="archive-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  
+    <!--微信公众号二维码-->
+
+
+  
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-left">
+      &copy; 2014 - 2018 pyfight&nbsp;|&nbsp;
+      主题 <a href="https://github.com/giscafer/hexo-theme-cafe/" target="_blank">Cafe</a>
+    </div>
+     <div id="footer-right">
+      联系方式&nbsp;|&nbsp;775229224@qq.com
+    </div>
+  </div>
+</footer>
+ <script src="/jquery/jquery.min.js"></script>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">首页</a>
+  
+    <a href="/archives" class="mobile-nav-link">归档</a>
+  
+    <a href="/about" class="mobile-nav-link">关于</a>
+  
+</nav>
+    <img class="back-to-top-btn" src="/images/fly-to-top.png"/>
+<script>
+// Elevator script included on the page, already.
+window.onload = function() {
+  var elevator = new Elevator({
+    selector:'.back-to-top-btn',
+    element: document.querySelector('.back-to-top-btn'),
+    duration: 1000 // milliseconds
+  });
+}
+</script>
+      
+
+  
+    <script>
+      var cloudTieConfig = {
+        url: document.location.href, 
+        sourceId: "",
+        productKey: "e2fb4051c49842688ce669e634bc983f",
+        target: "cloud-tie-wrapper"
+      };
+    </script>
+    <script src="https://img1.ws.126.net/f2e/tie/yun/sdk/loader.js"></script>
+    
+
+  
+
+
+
+
+
+
+
+<!-- author:forvoid begin -->
+<!-- author:forvoid begin -->
+
+  <link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+  <script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script> 
+  <script>
+  var gitment = new Gitment({
+    // id: '页面 ID', // 可选。默认为 location.href
+    owner: 'pyfight',
+    repo: 'pyfight.github.io',
+    oauth: {
+    client_id: 'b496a6861cf2f61f1fd3',
+    client_secret: 'fdcf3633cce4b5f5439ae4bbcb7ae7b3bf3ad83d',
+    }
+  })
+  gitment.render(document.getElementById("gitment_comments"))
+</script>
+
+
+<!-- author:forvoid end -->
+
+<!-- author:forvoid end -->
+
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      })
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      })
+    </script>
+    <script type="text/javascript" src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+ <script src="/js/is.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+<script src="/js/elevator.js"></script>
+  </div>
+</body>
+</html>

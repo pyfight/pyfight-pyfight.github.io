@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>浅谈Lambda与StreamsApi | Pyfight</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="jdk1.8已经出了比较长的一段时间了，我们公司也开始逐步接入，各种新特性或API也渐渐用起来了（前路坑漫漫~~）以下就个人理解，简单介绍下JDK1.8的两大特性：lambda表达式和StreamsAPI。">
+<meta name="keywords" content="javase,lambda">
+<meta property="og:type" content="article">
+<meta property="og:title" content="浅谈Lambda与StreamsApi">
+<meta property="og:url" content="https://pyfight.github.io/2017/12/22/浅谈Lambda与StreamsApi/index.html">
+<meta property="og:site_name" content="Pyfight">
+<meta property="og:description" content="jdk1.8已经出了比较长的一段时间了，我们公司也开始逐步接入，各种新特性或API也渐渐用起来了（前路坑漫漫~~）以下就个人理解，简单介绍下JDK1.8的两大特性：lambda表达式和StreamsAPI。">
+<meta property="og:locale" content="zh-ch">
+<meta property="og:updated_time" content="2018-04-15T08:51:58.625Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="浅谈Lambda与StreamsApi">
+<meta name="twitter:description" content="jdk1.8已经出了比较长的一段时间了，我们公司也开始逐步接入，各种新特性或API也渐渐用起来了（前路坑漫漫~~）以下就个人理解，简单介绍下JDK1.8的两大特性：lambda表达式和StreamsAPI。">
+  
+    <link rel="alternate" href="/atom.xml" title="Pyfight" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    
+    <div id="header-inner" class="inner">
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://pyfight.github.io"></form>
+      </div>
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">首页</a>
+        
+          <a class="main-nav-link" href="/archives">归档</a>
+        
+          <a class="main-nav-link" href="/about">关于</a>
+        
+      </nav>
+      
+    </div>
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Pyfight</a>
+      </h1>
+      
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-浅谈Lambda与StreamsApi" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2017/12/22/浅谈Lambda与StreamsApi/" class="article-date">
+  <time datetime="2017-12-22T14:14:09.000Z" itemprop="datePublished">2017-12-22</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/java/">java</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      浅谈Lambda与StreamsApi
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- Table of Contents -->
+        
+        <p>jdk1.8已经出了比较长的一段时间了，我们公司也开始逐步接入，各种新特性或API也渐渐用起来了（前路坑漫漫~~）<br>以下就个人理解，简单介绍下JDK1.8的两大特性：lambda表达式和StreamsAPI。</p>
+<a id="more"></a>
+<h2 id="quick-start"><a href="#quick-start" class="headerlink" title="quick start"></a>quick start</h2><p>需求：将一群用户（User）按年龄从小至大排序。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">User</span> </span>&#123;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">long</span> id;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">int</span> age;</span><br><span class="line">	...</span><br><span class="line">	get/set...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在java1.8之前：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">List&lt;User&gt; userList = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">...填充数据</span><br><span class="line">Collections.sort(userList, <span class="keyword">new</span> Comparator&lt;User&gt;() &#123;</span><br><span class="line">     <span class="meta">@Override</span></span><br><span class="line">     <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">compare</span><span class="params">(User user1, User user2)</span> </span>&#123;</span><br><span class="line">         <span class="keyword">return</span> user1.getAge() - user2.getAge();</span><br><span class="line">     &#125;</span><br><span class="line"> &#125;);</span><br></pre></td></tr></table></figure></p>
+<p>在java1.8：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">List&lt;User&gt; userList = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">...填充数据</span><br><span class="line">Collections.sort(userList, (user1, user2) -&gt; user1.getAge() - user2.getAge());</span><br></pre></td></tr></table></figure></p>
+<h2 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h2><p>其实lambda表达式，通俗一点理解就是将一个方法（函数）写成某种特殊的形式，可以更加方便快捷地开发。<br>java通过lambda表达式替代了原来的匿名内部类的繁琐的写法，使其比较方便地实现原来的功能，同时使java这门语言往函数式编程的方向发展。</p>
+<p><strong>lambda语法：</strong><br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">参数列表  箭头(-&gt;)  语句块或表达式</span><br></pre></td></tr></table></figure></p>
+<p>我们以上面的Collections中的sort方法为例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Collections类中的sort方法声明为：</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T&gt; <span class="function"><span class="keyword">void</span> <span class="title">sort</span><span class="params">(List&lt;T&gt; list, Comparator&lt;? <span class="keyword">super</span> T&gt; c)</span> </span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">// 我们来看下第二个参数，在jdk1.8中Comparator这个接口新增了一个@FunctionalInterface的注解</span></span></span><br><span class="line"><span class="function"><span class="comment">// 这个注解表示为该接口为函数式接口，可以使用lambda表达式表示其实现。</span></span></span><br><span class="line"><span class="function">@FunctionalInterface</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> interface Comparator&lt;T&gt; </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">int</span> <span class="title">compare</span><span class="params">(T o1, T o2)</span></span>;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>利用lambda表达式语法，我们可以将实现写成（以UserList为例）：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Collections.sort(userList, </span><br><span class="line">	<span class="comment">// 参数列表 箭头(-&gt;)</span></span><br><span class="line">	(User user1, User user2) -&gt; &#123;</span><br><span class="line">		<span class="keyword">return</span> user1.getAge() - user2.getAge(); <span class="comment">//语句块</span></span><br><span class="line">	&#125;</span><br><span class="line">);</span><br></pre></td></tr></table></figure></p>
+<p>由于编译器可以自动识别入参的类型，<strong>入参类型的声明可以省略</strong>：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Collections.sort(userList, </span><br><span class="line">	<span class="comment">// 参数列表 箭头(-&gt;)</span></span><br><span class="line">	(user1, user2) -&gt; &#123;</span><br><span class="line">		<span class="keyword">return</span> user1.getAge() - user2.getAge(); <span class="comment">//语句块</span></span><br><span class="line">	&#125;</span><br><span class="line">);</span><br></pre></td></tr></table></figure></p>
+<p>上面的方法体中的是语句块，可以写成<strong>表达式</strong>：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Collections.sort(userList, </span><br><span class="line">	<span class="comment">// 参数列表 箭头(-&gt;)</span></span><br><span class="line">	(user1, user2) -&gt;user1.getAge() - user2.getAge());<span class="comment">// 表达式</span></span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p>注：当该方法有返回值时，<strong>表达式的值则会被当成返回值</strong><br>另外在jdk1.8，List已经提供了sort方法，可以直接userList.sort(…)</p>
+</blockquote>
+<p>当接口中的<strong>入参为1个参数时，方法入参的括号可以省略</strong>。如List中的forEach方法：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 将所有user的年龄增加1</span></span><br><span class="line">userList.forEach(user -&gt; user.setAge(user.getAge() + <span class="number">1</span>));</span><br></pre></td></tr></table></figure></p>
+<p>当接口的入参为<strong>非1个参数时（0个或多个），方法入参的括号不可省略</strong>：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 0个</span></span><br><span class="line"><span class="keyword">new</span> Thread(()-&gt;&#123;</span><br><span class="line">	...</span><br><span class="line">&#125;);</span><br><span class="line"><span class="comment">// 多个</span></span><br><span class="line">Collections.sort(userList, **(user1, user2) -&gt; user1.getAge() - user2.getAge());</span><br></pre></td></tr></table></figure></p>
+<h2 id="jdk自带的函数接口"><a href="#jdk自带的函数接口" class="headerlink" title="jdk自带的函数接口"></a>jdk自带的函数接口</h2><p>为避免用户定义过多重复的函数接口以及提供给自身API（如Steam）的使用，jdk提供了许多通用的函数接口，基本上满足需求了。如下：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 无返回值</span></span><br><span class="line"><span class="meta">@FunctionalInterface</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Consumer</span>&lt;<span class="title">T</span>&gt; </span>&#123; </span><br><span class="line">   <span class="function"><span class="keyword">void</span> <span class="title">accept</span><span class="params">(T t)</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 返回true或false</span></span><br><span class="line"><span class="meta">@FunctionalInterface</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Predicate</span>&lt;<span class="title">T</span>&gt; </span>&#123;    </span><br><span class="line">   <span class="function"><span class="keyword">boolean</span> <span class="title">test</span><span class="params">(T t)</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 返回某个对象</span></span><br><span class="line"><span class="meta">@FunctionalInterface</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Function</span>&lt;<span class="title">T</span>, <span class="title">R</span>&gt; </span>&#123;    </span><br><span class="line">   <span class="function">R <span class="title">apply</span><span class="params">(T t)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>另外Comparator、Runnable等接口也被打上@FunctionalInterface注解，表示为函数式接口。<br>具体的使用可以参考<a href="http://ifeve.com/predicate-and-consumer-interface-in-java-util-function-package-in-java-8/" target="_blank" rel="noopener">这篇文章</a></p>
+<h2 id="Stream（流）"><a href="#Stream（流）" class="headerlink" title="Stream（流）"></a>Stream（流）</h2><blockquote>
+<p>Java 8 中的Stream是对<strong>集合（Collection）</strong>对象功能的增强，它专注于对集合对象进行各种非常便利、高效的聚合操作，或者大批量数据操作。由于Stream中的集合的操作时可以进行并行操作的，这也就可以充分利用多核处理器的优势。另外在日常的集合操作中也非常方便。</p>
+</blockquote>
+<h3 id="简单使用"><a href="#简单使用" class="headerlink" title="简单使用"></a>简单使用</h3><p>需求：将大于18周岁的人的用户（User）按照年龄从小至大排序后，获取其对应的id集合。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"> <span class="comment">// 获取流（Stream&lt;User&gt;）</span></span><br><span class="line">Stream&lt;User&gt; userStream = userList.stream();</span><br><span class="line"><span class="comment">// 过滤操作，过滤后只剩符合条件的流（Stream&lt;User&gt;）</span></span><br><span class="line">Stream&lt;User&gt; filterStream = userStream.filter(user -&gt; user.getAge() &gt; <span class="number">18</span>);</span><br><span class="line"><span class="comment">// 根据年龄排序，得到排序后的流（Stream&lt;User&gt;）</span></span><br><span class="line">Stream&lt;User&gt; sortedStream = filterStream.sorted((user1, user2) -&gt; user1.getAge() - user2.getAge());</span><br><span class="line"></span><br><span class="line"><span class="comment">// 映射，sortedStream为Stream&lt;User&gt;对象，调用map后，映射成了关于id类型的流对象（Stream&lt;Long&gt;）</span></span><br><span class="line">Stream&lt;Long&gt; idStream = sortedStream.map(user -&gt; user.getId());</span><br><span class="line"></span><br><span class="line"><span class="comment">// 收集（终结方法），不再返回Stream对象了，而是转成集合对象List（可以理解前面的方法是水流啊流，现在用个盆子装起来了）</span></span><br><span class="line">List&lt;Long&gt; idList = idStream.collect(Collectors.toList());</span><br><span class="line"></span><br><span class="line">--------------------------------------------------------------------------------------------------------------</span><br><span class="line"></span><br><span class="line"><span class="comment">// 上面写法仅为大家方便理解，其实是可以写出链式写法的（也是日常写法，建议每个方法调用各占一行）</span></span><br><span class="line">List&lt;Long&gt; idList = userList.stream() </span><br><span class="line">                .filter(user -&gt; user.getAge() &gt; <span class="number">18</span>)  </span><br><span class="line">                .sorted((user1, user2) -&gt; user1.getAge() - user2.getAge())  </span><br><span class="line">                .map(user -&gt; user.getId())  </span><br><span class="line">                .collect(Collectors.toList());</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p>Stream 就如同一个迭代器（Iterator），单向，不可往复，数据只能遍历一次，遍历过一次后即用尽了，就好比流水从面前流过，一去不复返。即每个Stream对象只能操作/调用相关方法一次，如果再次操作，则会抛出“java.lang.IllegalStateException: stream has already been operated upon or closed”（所以建议写成链式写法）<br>另外，这里提到的Stream流和IO流不是一个概念。</p>
+</blockquote>
+<p>我们知道lambda表达式，其实就是代表了某个接口（interface）的一个实现，下面来看看filter、sort等方法传入的lambda代表的是什么接口：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Stream接口</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Stream</span>&lt;<span class="title">T</span>&gt; <span class="keyword">extends</span> <span class="title">BaseStream</span>&lt;<span class="title">T</span>, <span class="title">Stream</span>&lt;<span class="title">T</span>&gt;&gt; </span>&#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="comment">// 上述提到的Predicate接口（有个test()方法，返回boolean）</span></span><br><span class="line">  <span class="function">Stream&lt;T&gt; <span class="title">filter</span><span class="params">(Predicate&lt;? <span class="keyword">super</span> T&gt; predicate)</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 常见的比较接口Comparator</span></span><br><span class="line">  <span class="function">Stream&lt;T&gt; <span class="title">sorted</span><span class="params">(Comparator&lt;? <span class="keyword">super</span> T&gt; comparator)</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 上述提到的Function接口（里面有个R apply(T)方法，入参为一个类型为T的对象，返回一个R类型的新对象，其实这就是一个映射过程）</span></span><br><span class="line">  <span class="function">Stream&lt;R&gt; <span class="title">map</span><span class="params">(Function&lt;? <span class="keyword">super</span> T, ? extends R&gt; mapper)</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 这个方法为终结（Terminal）方法，返回的是某个类型R（通常为集合类型List、Set、Map等）,</span></span><br><span class="line">  <span class="comment">// 入参为Collector接口,Collectors类中给我们提供了许多生成对应接口的静态方法，如toList()、toSet()等</span></span><br><span class="line">  <span class="function">R <span class="title">collect</span><span class="params">(Collector&lt;? <span class="keyword">super</span> T, A, R&gt; collector)</span></span>;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>若对Streams API有兴趣或者不理解，推荐看下<a href="https://www.ibm.com/developerworks/cn/java/j-lo-java8streamapi/" target="_blank" rel="noopener">Java 8 中的 Streams API 详解</a>，里面提到了Stream 非常详细的API和相关概念。本文的关于Stream的一些概念也是来自于此。</p>
+<h3 id="性能相关"><a href="#性能相关" class="headerlink" title="性能相关"></a>性能相关</h3><p>网上很多关于Stream的性能评测，许多都太过于片面，或刻意错误使用（频繁装拆箱），或测试数据量过小；以下一篇个人认为是比较全面的测试：<a href="https://github.com/CarpenterLee/JavaLambdaInternals/blob/master/8-Stream%20Performance.md" target="_blank" rel="noopener">Stream Performance</a>.</p>
+<p>简单来说，性能方面Stream利用的是现代多核处理器的优势，可以将原本的遍历处理利用多线程来处理，数据量越大、计算机核数越多、操作越复杂，执行效率就越高。</p>
+<p><strong>Streams使用的建议：</strong></p>
+<ol>
+<li>对于简单操作推荐使用外部迭代手动实现（即常规forEach或iterator）</li>
+<li>对于复杂操作，推荐使用Stream API </li>
+<li>在多核情况下，推荐使用并行Stream API来发挥多核优势</li>
+<li>单核情况下不建议使用并行Stream API</li>
+<li>一般的Stream中装、拆箱会很耗时，建议使用IntStream、LongStream、DoubleStream<h3 id="啰嗦几句"><a href="#啰嗦几句" class="headerlink" title="啰嗦几句"></a>啰嗦几句</h3>目前许多框架（如spring）的低版本，可能和JDK1.8兼容性不太好（尤其是lambda和代理类的相关问题），排查问题的时候，可以留意下新的API和lambda的问题，升级踩坑难以避免，量力而行。</li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://pyfight.github.io/2017/12/22/浅谈Lambda与StreamsApi/" data-id="cjg0ketab0005y8ou0pr2hdmv" class="article-share-link">分享</a>
+      
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/javase/">javase</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/lambda/">lambda</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+ <script src="/jquery/jquery.min.js"></script>
+  <div id="random_posts">
+    <h2>推荐文章</h2>
+    <div class="random_posts_ul">
+      <script>
+          var random_count =4
+          var site = {BASE_URI:'/'};
+          function load_random_posts(obj) {
+              var arr=site.posts;
+              if (!obj) return;
+              // var count = $(obj).attr('data-count') || 6;
+              for (var i, tmp, n = arr.length; n; i = Math.floor(Math.random() * n), tmp = arr[--n], arr[n] = arr[i], arr[i] = tmp);
+              arr = arr.slice(0, random_count);
+              var html = '<ul>';
+            
+              for(var j=0;j<arr.length;j++){
+                var item=arr[j];
+                html += '<li><strong>' + 
+                item.date + ':&nbsp;&nbsp;<a href="' + (site.BASE_URI+item.uri) + '">' + 
+                (item.title || item.uri) + '</a></strong>';
+                if(item.excerpt){
+                  html +='<div class="post-excerpt">'+item.excerpt+'</div>';
+                }
+                html +='</li>';
+                
+              }
+              $(obj).html(html + '</ul>');
+          }
+          $('.random_posts_ul').each(function () {
+              var c = this;
+              if (!site.posts || !site.posts.length){
+                  $.getJSON(site.BASE_URI + 'js/posts.js',function(json){site.posts = json;load_random_posts(c)});
+              } 
+               else{
+                load_random_posts(c);
+              }
+          });
+      </script>
+    </div>
+  </div>
+
+    
+<nav id="article-nav">
+  
+    <a href="/2018/04/15/mysql优化心得/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">上一篇</strong>
+      <div class="article-nav-title">
+        
+          mysql优化心得
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2017/09/17/用户-角色-资源 简单权限设计/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <div class="article-nav-title">用户-角色-资源 简单权限设计</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+ 
+     
+  <div class="comments" id="comments">
+    
+     
+       
+      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+    
+       
+      
+      
+           <div id="gitment_comments"></div>
+    
+  </div>
+ 
+  
+
+</section>
+           
+    <aside id="sidebar">
+  
+    
+
+  
+    
+    <div class="widget-wrap">
+    
+      <div class="widget" id="toc-widget-fixed">
+      
+        <strong class="toc-title">文章目录</strong>
+        <div class="toc-widget-list">
+              <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#quick-start"><span class="toc-number">1.</span> <span class="toc-text">quick start</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#语法"><span class="toc-number">2.</span> <span class="toc-text">语法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#jdk自带的函数接口"><span class="toc-number">3.</span> <span class="toc-text">jdk自带的函数接口</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Stream（流）"><span class="toc-number">4.</span> <span class="toc-text">Stream（流）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#简单使用"><span class="toc-number">4.1.</span> <span class="toc-text">简单使用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#性能相关"><span class="toc-number">4.2.</span> <span class="toc-text">性能相关</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#啰嗦几句"><span class="toc-number">4.3.</span> <span class="toc-text">啰嗦几句</span></a></li></ol></li></ol>
+          </div>
+      </div>
+    </div>
+
+  
+    
+
+  
+    
+  
+    
+  
+    
+
+  
+    
+  
+    <!--微信公众号二维码-->
+
+
+  
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-left">
+      &copy; 2014 - 2018 pyfight&nbsp;|&nbsp;
+      主题 <a href="https://github.com/giscafer/hexo-theme-cafe/" target="_blank">Cafe</a>
+    </div>
+     <div id="footer-right">
+      联系方式&nbsp;|&nbsp;775229224@qq.com
+    </div>
+  </div>
+</footer>
+ <script src="/jquery/jquery.min.js"></script>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">首页</a>
+  
+    <a href="/archives" class="mobile-nav-link">归档</a>
+  
+    <a href="/about" class="mobile-nav-link">关于</a>
+  
+</nav>
+    <img class="back-to-top-btn" src="/images/fly-to-top.png"/>
+<script>
+// Elevator script included on the page, already.
+window.onload = function() {
+  var elevator = new Elevator({
+    selector:'.back-to-top-btn',
+    element: document.querySelector('.back-to-top-btn'),
+    duration: 1000 // milliseconds
+  });
+}
+</script>
+      
+
+  
+    <script>
+      var cloudTieConfig = {
+        url: document.location.href, 
+        sourceId: "",
+        productKey: "e2fb4051c49842688ce669e634bc983f",
+        target: "cloud-tie-wrapper"
+      };
+    </script>
+    <script src="https://img1.ws.126.net/f2e/tie/yun/sdk/loader.js"></script>
+    
+
+  
+
+
+
+
+
+
+
+<!-- author:forvoid begin -->
+<!-- author:forvoid begin -->
+
+  <link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+  <script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script> 
+  <script>
+  var gitment = new Gitment({
+    // id: '页面 ID', // 可选。默认为 location.href
+    owner: 'pyfight',
+    repo: 'pyfight.github.io',
+    oauth: {
+    client_id: 'b496a6861cf2f61f1fd3',
+    client_secret: 'fdcf3633cce4b5f5439ae4bbcb7ae7b3bf3ad83d',
+    }
+  })
+  gitment.render(document.getElementById("gitment_comments"))
+</script>
+
+
+<!-- author:forvoid end -->
+
+<!-- author:forvoid end -->
+
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      })
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      })
+    </script>
+    <script type="text/javascript" src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+ <script src="/js/is.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+<script src="/js/elevator.js"></script>
+  </div>
+</body>
+</html>

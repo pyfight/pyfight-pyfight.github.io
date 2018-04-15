@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>用户-角色-资源 简单权限设计 | Pyfight</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="所谓权限，无非就是哪些用户允许干哪些事情，能够访问、操作哪些资源（web通常以url为粒度）。一般的后台管理（配置）系统都会做相应的权限控制（往往以用户-角色-资源为基础）。 用户-角色-资源（user-role-resource）在实际业务中，某一类可以访问/操作的资源或者页面往往是对应某一类用户的。例如：一个教务管理系统，小明同学、小红同学等用户可以进去查成绩，看课程安排；而张老师、王老师等用">
+<meta name="keywords" content="权限">
+<meta property="og:type" content="article">
+<meta property="og:title" content="用户-角色-资源 简单权限设计">
+<meta property="og:url" content="https://pyfight.github.io/2017/09/17/用户-角色-资源 简单权限设计/index.html">
+<meta property="og:site_name" content="Pyfight">
+<meta property="og:description" content="所谓权限，无非就是哪些用户允许干哪些事情，能够访问、操作哪些资源（web通常以url为粒度）。一般的后台管理（配置）系统都会做相应的权限控制（往往以用户-角色-资源为基础）。 用户-角色-资源（user-role-resource）在实际业务中，某一类可以访问/操作的资源或者页面往往是对应某一类用户的。例如：一个教务管理系统，小明同学、小红同学等用户可以进去查成绩，看课程安排；而张老师、王老师等用">
+<meta property="og:locale" content="zh-ch">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/7779607-d52c496192633720.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:updated_time" content="2018-04-15T08:22:13.847Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="用户-角色-资源 简单权限设计">
+<meta name="twitter:description" content="所谓权限，无非就是哪些用户允许干哪些事情，能够访问、操作哪些资源（web通常以url为粒度）。一般的后台管理（配置）系统都会做相应的权限控制（往往以用户-角色-资源为基础）。 用户-角色-资源（user-role-resource）在实际业务中，某一类可以访问/操作的资源或者页面往往是对应某一类用户的。例如：一个教务管理系统，小明同学、小红同学等用户可以进去查成绩，看课程安排；而张老师、王老师等用">
+<meta name="twitter:image" content="http://upload-images.jianshu.io/upload_images/7779607-d52c496192633720.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+  
+    <link rel="alternate" href="/atom.xml" title="Pyfight" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    
+    <div id="header-inner" class="inner">
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://pyfight.github.io"></form>
+      </div>
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">首页</a>
+        
+          <a class="main-nav-link" href="/archives">归档</a>
+        
+          <a class="main-nav-link" href="/about">关于</a>
+        
+      </nav>
+      
+    </div>
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Pyfight</a>
+      </h1>
+      
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-用户-角色-资源 简单权限设计" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2017/09/17/用户-角色-资源 简单权限设计/" class="article-date">
+  <time datetime="2017-09-17T07:24:01.000Z" itemprop="datePublished">2017-09-17</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      用户-角色-资源 简单权限设计
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- Table of Contents -->
+        
+        <p>所谓权限，无非就是<strong>哪些用户允许干哪些事情，能够访问、操作哪些资源（web通常以url为粒度）</strong>。一般的后台管理（配置）系统都会做相应的权限控制（往往以用户-角色-资源为基础）。</p>
+<h2 id="用户-角色-资源（user-role-resource）"><a href="#用户-角色-资源（user-role-resource）" class="headerlink" title="用户-角色-资源（user-role-resource）"></a>用户-角色-资源（user-role-resource）</h2><p>在实际业务中，某一类可以访问/操作的资源或者页面往往是对应某一类用户的。<br>例如：一个教务管理系统，小明同学、小红同学等用户可以进去查成绩，看课程安排；而张老师、王老师等用户则可以进去录入、修改学生成绩；资源表内容如下：</p>
+<a id="more"></a>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">id</th>
+<th style="text-align:left">description</th>
+<th style="text-align:left">url</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">1</td>
+<td style="text-align:left">获取成绩</td>
+<td style="text-align:left">/mark/get</td>
+</tr>
+<tr>
+<td style="text-align:left">2</td>
+<td style="text-align:left">获取课程</td>
+<td style="text-align:left">/course/get</td>
+</tr>
+<tr>
+<td style="text-align:left">3</td>
+<td style="text-align:left">录入成绩</td>
+<td style="text-align:left">/mark/add</td>
+</tr>
+<tr>
+<td style="text-align:left">4</td>
+<td style="text-align:left">修改成绩</td>
+<td style="text-align:left">/mark/modify</td>
+</tr>
+</tbody>
+</table>
+<p><strong>学生</strong>这一类用户允许访问id为1和2的资源；<br><strong>老师</strong>这一类用户允许访问id为3和4的资源；</p>
+<p>我们将拥有共同访问资源的某一类用户，统称为某个<strong>角色（role）</strong>或某个<strong>用户组（group）</strong>，用户属于某个角色，而这个角色会有属于它可以访问的资源。</p>
+<p>如上面的小明同学属于<strong>学生</strong>这个角色，而学生这个角色有id为1、2的资源，即可以查成绩、获取课程等，但是没有<strong>老师</strong>这个角色的资源（录入和修改成绩等）。</p>
+<p>当有一个新的同学（user）录入时，系统则可以直接将该user设定为<strong>学生</strong>这个角色，即可拥有其对应的所有权限。</p>
+<h2 id="数据库表设计"><a href="#数据库表设计" class="headerlink" title="数据库表设计"></a>数据库表设计</h2><p>用户和角色为多对多关系：一个角色是对应有多个用户的（学生–&gt;小明、小红）；另外，一个用户可能会有多个角色，例如小杰是一个在读研究生（学生），但是也会给大一的同学讲课（老师）；</p>
+<p>角色和资源为多对多关系：一个角色是对应多个资源的（学生–&gt;查看成绩、获取课程）；另外，一个资源也是可以被多个角色访问的，例如修改个人信息，无论学生还是老师都可以拥有的。</p>
+<p>具体表结构设计如下：<br><img src="http://upload-images.jianshu.io/upload_images/7779607-d52c496192633720.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="常规权限表结构"></p>
+<h2 id="实际拦截操作"><a href="#实际拦截操作" class="headerlink" title="实际拦截操作"></a>实际拦截操作</h2><p>当用户登录之后，系统可以查询数据库，user–&gt;role–&gt;resource获取其可以访问/操作的资源。当该用户访问某个url时，例如/mark/modify ，web后台会设置一个专门的权限拦截器，比对判断该用户是否拥有该权限而做出相应处理。</p>
+<h2 id="其他拓展"><a href="#其他拓展" class="headerlink" title="其他拓展"></a>其他拓展</h2><ol>
+<li>不同的业务可能会有不同的设计，例如目前很多管理系统往往一个用户只会对应一个角色，这样也满足了实际需求；而这时候角色和用户就是<strong>1对多</strong>的情况了。</li>
+<li>另外也存在这样的业务需求：用户除了其对应角色的权限外，还希望为该用户有其额外/特殊的对应的可访问资源，这时候user和resource之间会建立起来一个类似role_resource的多对多关系。</li>
+<li>对于角色（role），有时候会有父级的设计（多一个parent_id字段等），这时候表示子级的角色可以访问父级的资源，属于一个权限拓展的过程。比如美国大片中小士兵的id为1，而比他高一级的排长的parent_id则为1，这时候排长起码会有小士兵的权限；再上一级，连长的parent_id则是排长的id，一级一级下去。</li>
+<li>还有一些的资源会细分到以某个函数为粒度的，这时候表设计仍然类似，具体拦截方法不一样而已。</li>
+</ol>
+<p>虽然拓展性有很多，但是不建议将权限关系弄得过于复杂，满足自身业务需求即可。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://pyfight.github.io/2017/09/17/用户-角色-资源 简单权限设计/" data-id="cjg0ketac0006y8ou56g52tq6" class="article-share-link">分享</a>
+      
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/权限/">权限</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+ <script src="/jquery/jquery.min.js"></script>
+  <div id="random_posts">
+    <h2>推荐文章</h2>
+    <div class="random_posts_ul">
+      <script>
+          var random_count =4
+          var site = {BASE_URI:'/'};
+          function load_random_posts(obj) {
+              var arr=site.posts;
+              if (!obj) return;
+              // var count = $(obj).attr('data-count') || 6;
+              for (var i, tmp, n = arr.length; n; i = Math.floor(Math.random() * n), tmp = arr[--n], arr[n] = arr[i], arr[i] = tmp);
+              arr = arr.slice(0, random_count);
+              var html = '<ul>';
+            
+              for(var j=0;j<arr.length;j++){
+                var item=arr[j];
+                html += '<li><strong>' + 
+                item.date + ':&nbsp;&nbsp;<a href="' + (site.BASE_URI+item.uri) + '">' + 
+                (item.title || item.uri) + '</a></strong>';
+                if(item.excerpt){
+                  html +='<div class="post-excerpt">'+item.excerpt+'</div>';
+                }
+                html +='</li>';
+                
+              }
+              $(obj).html(html + '</ul>');
+          }
+          $('.random_posts_ul').each(function () {
+              var c = this;
+              if (!site.posts || !site.posts.length){
+                  $.getJSON(site.BASE_URI + 'js/posts.js',function(json){site.posts = json;load_random_posts(c)});
+              } 
+               else{
+                load_random_posts(c);
+              }
+          });
+      </script>
+    </div>
+  </div>
+
+    
+<nav id="article-nav">
+  
+    <a href="/2017/12/22/浅谈Lambda与StreamsApi/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">上一篇</strong>
+      <div class="article-nav-title">
+        
+          浅谈Lambda与StreamsApi
+        
+      </div>
+    </a>
+  
+  
+</nav>
+
+  
+</article>
+ 
+     
+  <div class="comments" id="comments">
+    
+     
+       
+      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+    
+       
+      
+      
+           <div id="gitment_comments"></div>
+    
+  </div>
+ 
+  
+
+</section>
+           
+    <aside id="sidebar">
+  
+    
+
+  
+    
+    <div class="widget-wrap">
+    
+      <div class="widget" id="toc-widget-fixed">
+      
+        <strong class="toc-title">文章目录</strong>
+        <div class="toc-widget-list">
+              <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#用户-角色-资源（user-role-resource）"><span class="toc-number">1.</span> <span class="toc-text">用户-角色-资源（user-role-resource）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#数据库表设计"><span class="toc-number">2.</span> <span class="toc-text">数据库表设计</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#实际拦截操作"><span class="toc-number">3.</span> <span class="toc-text">实际拦截操作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#其他拓展"><span class="toc-number">4.</span> <span class="toc-text">其他拓展</span></a></li></ol>
+          </div>
+      </div>
+    </div>
+
+  
+    
+
+  
+    
+  
+    
+  
+    
+
+  
+    
+  
+    <!--微信公众号二维码-->
+
+
+  
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-left">
+      &copy; 2014 - 2018 pyfight&nbsp;|&nbsp;
+      主题 <a href="https://github.com/giscafer/hexo-theme-cafe/" target="_blank">Cafe</a>
+    </div>
+     <div id="footer-right">
+      联系方式&nbsp;|&nbsp;775229224@qq.com
+    </div>
+  </div>
+</footer>
+ <script src="/jquery/jquery.min.js"></script>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">首页</a>
+  
+    <a href="/archives" class="mobile-nav-link">归档</a>
+  
+    <a href="/about" class="mobile-nav-link">关于</a>
+  
+</nav>
+    <img class="back-to-top-btn" src="/images/fly-to-top.png"/>
+<script>
+// Elevator script included on the page, already.
+window.onload = function() {
+  var elevator = new Elevator({
+    selector:'.back-to-top-btn',
+    element: document.querySelector('.back-to-top-btn'),
+    duration: 1000 // milliseconds
+  });
+}
+</script>
+      
+
+  
+    <script>
+      var cloudTieConfig = {
+        url: document.location.href, 
+        sourceId: "",
+        productKey: "e2fb4051c49842688ce669e634bc983f",
+        target: "cloud-tie-wrapper"
+      };
+    </script>
+    <script src="https://img1.ws.126.net/f2e/tie/yun/sdk/loader.js"></script>
+    
+
+  
+
+
+
+
+
+
+
+<!-- author:forvoid begin -->
+<!-- author:forvoid begin -->
+
+  <link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+  <script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script> 
+  <script>
+  var gitment = new Gitment({
+    // id: '页面 ID', // 可选。默认为 location.href
+    owner: 'pyfight',
+    repo: 'pyfight.github.io',
+    oauth: {
+    client_id: 'b496a6861cf2f61f1fd3',
+    client_secret: 'fdcf3633cce4b5f5439ae4bbcb7ae7b3bf3ad83d',
+    }
+  })
+  gitment.render(document.getElementById("gitment_comments"))
+</script>
+
+
+<!-- author:forvoid end -->
+
+<!-- author:forvoid end -->
+
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      })
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      })
+    </script>
+    <script type="text/javascript" src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+ <script src="/js/is.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+<script src="/js/elevator.js"></script>
+  </div>
+</body>
+</html>
